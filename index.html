@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Farm - Выращивайте крипто-проекты</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Главная страница -->
+        <div id="home-page" class="page active">
+            <div class="hero-bg">
+                <!-- Пиксельные облака -->
+                <div class="cloud cloud-1"></div>
+                <div class="cloud cloud-2"></div>
+                
+                <div class="container">
+                    <div class="text-center hero-content">
+                        <h1 class="hero-title">🌱 CRYPTO FARM</h1>
+                        <p class="hero-subtitle">Выращивайте крипто-проекты и собирайте урожай токенов!</p>
+                        
+                        <div id="login-section">
+                            <button id="login-btn" class="btn-primary">
+                                🔐 Войти через Google
+                            </button>
+                        </div>
+                        
+                        <div id="main-content" class="main-content hidden">
+                            <h2 class="section-title">📈 Популярные проекты</h2>
+                            <div class="projects-grid" id="popular-projects"></div>
+                            
+                            <div class="info-grid">
+                                <div class="info-card">
+                                    <h3 class="info-title">📰 Новости</h3>
+                                    <div id="news-list"></div>
+                                </div>
+                                
+                                <div class="info-card">
+                                    <h3 class="info-title">🎯 Быстрый старт</h3>
+                                    <div class="steps">
+                                        <div class="step">
+                                            <div class="step-number">1</div>
+                                            <span>Выберите проект в витрине</span>
+                                        </div>
+                                        <div class="step">
+                                            <div class="step-number">2</div>
+                                            <span>Посадите на свою ферму</span>
+                                        </div>
+                                        <div class="step">
+                                            <div class="step-number">3</div>
+                                            <span>Дождитесь созревания</span>
+                                        </div>
+                                        <div class="step">
+                                            <div class="step-number">4</div>
+                                            <span>Соберите урожай токенов!</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Витрина проектов -->
+        <div id="store-page" class="page">
+            <div class="store-bg">
+                <div class="container">
+                    <div class="text-center">
+                        <h1 class="page-title">🛒 Витрина проектов</h1>
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" data-filter="all">Все</button>
+                            <button class="filter-btn" data-filter="defi">DeFi</button>
+                            <button class="filter-btn" data-filter="nft">NFT</button>
+                            <button class="filter-btn" data-filter="gamefi">GameFi</button>
+                        </div>
+                    </div>
+                    
+                    <div class="projects-grid" id="store-projects"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Моя ферма -->
+        <div id="farm-page" class="page">
+            <div class="farm-bg">
+                <div class="container">
+                    <div class="text-center">
+                        <h1 class="page-title">🚜 Моя ферма</h1>
+                        <div class="farm-stats">
+                            <div class="stat">
+                                <div class="stat-number" id="projects-count">0</div>
+                                <div class="stat-label">Проектов</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-number" id="ready-count">0</div>
+                                <div class="stat-label">Готовых</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-number">$123</div>
+                                <div class="stat-label">Заработано</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="empty-farm" class="empty-state">
+                        <div class="empty-icon">🌾</div>
+                        <h2 class="empty-title">Ваша ферма пуста</h2>
+                        <p class="empty-text">Перейдите в витрину и посадите первый проект!</p>
+                        <button class="btn-primary" onclick="showPage('store')">🛒 В витрину</button>
+                    </div>
+                    
+                    <div class="projects-grid" id="farm-projects"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Новости -->
+        <div id="news-page" class="page">
+            <div class="news-bg">
+                <div class="container">
+                    <div class="text-center">
+                        <h1 class="page-title">📰 Новости</h1>
+                    </div>
+                    
+                    <div class="news-list" id="news-full-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Рефералы -->
+        <div id="referrals-page" class="page">
+            <div class="referrals-bg">
+                <div class="container">
+                    <div class="text-center">
+                        <h1 class="page-title">👥 Рефералы</h1>
+                    </div>
+                    
+                    <div class="referrals-card">
+                        <div class="referrals-stats">
+                            <div class="stat">
+                                <div class="stat-number referrals-number">12</div>
+                                <div class="stat-label">Приглашенных</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-number referrals-earned">$248</div>
+                                <div class="stat-label">Заработано</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-number referrals-bonus">+15%</div>
+                                <div class="stat-label">Бонус роста</div>
+                            </div>
+                        </div>
+                        
+                        <div class="referral-link-section">
+                            <h3 class="referral-title">Ваша реферальная ссылка:</h3>
+                            <div class="referral-input-group">
+                                <input type="text" id="referral-link" value="https://cryptofarm.app/ref/abc123" readonly>
+                                <button class="btn-copy" onclick="copyReferralLink()">Копировать</button>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center">
+                            <button class="btn-primary">📧 Пригласить друзей</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Навигация -->
+    <nav id="navigation" class="navigation hidden">
+        <button class="nav-btn active" data-page="home">
+            <i class="fas fa-home"></i>
+            <span>Главная</span>
+        </button>
+        <button class="nav-btn" data-page="store">
+            <i class="fas fa-shopping-cart"></i>
+            <span>Витрина</span>
+        </button>
+        <button class="nav-btn" data-page="farm">
+            <i class="fas fa-seedling"></i>
+            <span>Ферма</span>
+        </button>
+        <button class="nav-btn" data-page="news">
+            <i class="fas fa-bell"></i>
+            <span>Новости</span>
+        </button>
+        <button class="nav-btn" data-page="referrals">
+            <i class="fas fa-users"></i>
+            <span>Рефералы</span>
+        </button>
+    </nav>
+
+    <!-- Уведомления -->
+    <div id="notifications" class="notifications"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>

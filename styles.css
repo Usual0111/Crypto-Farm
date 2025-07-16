@@ -46,7 +46,7 @@ body {
 }
 
 .store-bg {
-    background: linear-gradient(to bottom, #fde047, #fb923c);
+    background: linear-gradient(to bottom, #60a5fa, #0ea5e9);
     min-height: 100vh;
     padding: 2rem 0;
 }

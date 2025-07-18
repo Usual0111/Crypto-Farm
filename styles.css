@@ -365,6 +365,7 @@ body {
     background: rgba(255, 255, 255, 0.2);
     border-radius: 0.5rem;
     padding: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .info-title {

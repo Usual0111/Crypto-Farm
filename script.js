@@ -1,8 +1,13 @@
 // Глобальные переменные
 let currentPage = 'home';
 let isLoggedIn = false;
+let currentUser = null;
 let farmProjects = [];
 let notifications = [];
+
+// Система пользователей (имитация базы данных)
+let users = [];
+let userProjects = {};
 
 // Данные проектов
 const projects = [
@@ -110,6 +115,7 @@ const news = [
 
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', function() {
+    loadFromStorage();
     initializeApp();
     setupEventListeners();
     startProgressUpdater();
@@ -125,8 +131,12 @@ function initializeApp() {
 }
 
 function setupEventListeners() {
-    // Кнопка входа
-    document.getElementById('login-btn').addEventListener('click', login);
+    // Авторизация
+    document.getElementById('login-btn').addEventListener('click', handleLogin);
+    document.getElementById('register-btn').addEventListener('click', handleRegister);
+    document.getElementById('show-register').addEventListener('click', showRegisterForm);
+    document.getElementById('show-login').addEventListener('click', showLoginForm);
+    document.getElementById('logout-btn').addEventListener('click', logout);
     
     // Навигация
     document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -142,19 +152,102 @@ function setupEventListeners() {
             const filter = this.dataset.filter;
             filterProjects(filter);
             
-            // Обновляем активный фильтр
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
         });
     });
 }
 
-function login() {
+function handleLogin() {
+    const email = document.getElementById('login-email').value;
+    const password = document.getElementById('login-password').value;
+    
+    if (!email || !password) {
+        showNotification('Заполните все поля!');
+        return;
+    }
+    
+    const user = users.find(u => u.email === email && u.password === password);
+    if (user) {
+        loginUser(user);
+    } else {
+        showNotification('Неверный email или пароль!');
+    }
+}
+
+function handleRegister() {
+    const name = document.getElementById('register-name').value;
+    const email = document.getElementById('register-email').value;
+    const password = document.getElementById('register-password').value;
+    const confirmPassword = document.getElementById('register-confirm').value;
+    
+    if (!name || !email || !password || !confirmPassword) {
+        showNotification('Заполните все поля!');
+        return;
+    }
+    
+    if (password !== confirmPassword) {
+        showNotification('Пароли не совпадают!');
+        return;
+    }
+    
+    if (users.find(u => u.email === email)) {
+        showNotification('Пользователь с таким email уже существует!');
+        return;
+    }
+    
+    const newUser = {
+        id: Date.now(),
+        name: name,
+        email: email,
+        password: password,
+        createdAt: Date.now()
+    };
+    
+    users.push(newUser);
+    userProjects[newUser.id] = [];
+    saveToStorage();
+    
+    loginUser(newUser);
+}
+
+function loginUser(user) {
+    currentUser = user;
     isLoggedIn = true;
-    document.getElementById('login-section').classList.add('hidden');
+    farmProjects = userProjects[user.id] || [];
+    
+    document.getElementById('auth-section').classList.add('hidden');
     document.getElementById('main-content').classList.remove('hidden');
     document.getElementById('navigation').classList.remove('hidden');
-    showNotification('Добро пожаловать в Crypto Farm! 🎉');
+    document.getElementById('current-user-name').textContent = user.name;
+    
+    updateFarmStats();
+    renderFarmProjects();
+    showNotification(`Добро пожаловать, ${user.name}! 🎉`);
+}
+
+function logout() {
+    saveUserProgress();
+    currentUser = null;
+    isLoggedIn = false;
+    farmProjects = [];
+    
+    document.getElementById('auth-section').classList.remove('hidden');
+    document.getElementById('main-content').classList.add('hidden');
+    document.getElementById('navigation').classList.add('hidden');
+    
+    showPage('home');
+    showNotification('Вы вышли из системы');
+}
+
+function showRegisterForm() {
+    document.getElementById('login-form').classList.add('hidden');
+    document.getElementById('register-form').classList.remove('hidden');
+}
+
+function showLoginForm() {
+    document.getElementById('register-form').classList.add('hidden');
+    document.getElementById('login-form').classList.remove('hidden');
 }
 
 function showPage(page) {
@@ -263,24 +356,47 @@ function filterProjects(filter) {
 }
 
 function plantProject(projectId) {
+    if (!isLoggedIn) {
+        showNotification('Войдите в систему для посадки проектов!');
+        return;
+    }
+    
     const project = projects.find(p => p.id === projectId);
     
-    if (project && !farmProjects.find(fp => fp.id === projectId)) {
-        const plantedProject = {
-            ...project,
-            planted: true,
-            progress: 0,
-            plantedAt: Date.now()
+    if (project) {
+        showProjectModal(project);
+    }
+}
+       
+function saveUserProgress() {
+    if (currentUser && isLoggedIn) {
+        userProjects[currentUser.id] = farmProjects;
+        saveToStorage();
+    }
+}
+
+function saveToStorage() {
+    // В реальном приложении здесь был бы API запрос
+    const data = {
+        users: users,
+        userProjects: userProjects
+    };
+    console.log('Данные сохранены:', data);
+}
+
+function loadFromStorage() {
+    // В реальном приложении здесь была бы загрузка из API
+    // Для демонстрации создаем тестового пользователя
+    if (users.length === 0) {
+        const testUser = {
+            id: 1,
+            name: 'Тестовый пользователь',
+            email: 'test@example.com',
+            password: '123456',
+            createdAt: Date.now()
         };
-        
-        farmProjects.push(plantedProject);
-        updateFarmStats();
-        renderFarmProjects();
-        
-        showNotification(`Проект "${project.name}" успешно посажен! 🌱`);
-        
-        // Симуляция перехода по партнерской ссылке
-        window.open('https://example.com/airdrop', '_blank');
+        users.push(testUser);
+        userProjects[testUser.id] = [];
     }
 }
 
@@ -404,13 +520,15 @@ function startProgressUpdater() {
             if (project.progress < 100) {
                 project.progress = Math.min(100, project.progress + Math.random() * 2);
                 updated = true;
+
+if (updated && currentPage === 'farm') {
+            updateFarmStats();
+            renderFarmProjects();
+            saveUserProgress();
+        }
             }
         });
         
-        if (updated && currentPage === 'farm') {
-            updateFarmStats();
-            renderFarmProjects();
-        }
     }, 3000);
 }
 
@@ -426,6 +544,60 @@ function showNotification(message) {
     setTimeout(() => {
         notification.remove();
     }, 4000);
+}
+
+function showProjectModal(project) {
+    document.getElementById('modal-project-name').textContent = project.name;
+    document.getElementById('modal-project-icon').textContent = project.icon;
+    document.getElementById('modal-project-reward').textContent = project.reward;
+    document.getElementById('modal-project-deadline').textContent = project.deadline;
+    document.getElementById('modal-project-difficulty').textContent = project.difficulty;
+    
+    // Настройка кнопки перехода на сайт
+    const linkBtn = document.getElementById('modal-project-link');
+    linkBtn.onclick = () => {
+        window.open('https://example.com/airdrop?ref=cryptofarm', '_blank');
+    };
+    
+    // Настройка кнопки посадки
+    const plantBtn = document.getElementById('modal-plant-btn');
+    plantBtn.onclick = () => {
+        confirmPlantProject(project);
+    };
+    
+    document.getElementById('project-modal').classList.remove('hidden');
+}
+
+function closeProjectModal() {
+    document.getElementById('project-modal').classList.add('hidden');
+    // Сбрасываем чекбоксы
+    document.querySelectorAll('#modal-checklist input[type="checkbox"]').forEach(cb => {
+        cb.checked = false;
+    });
+}
+
+function confirmPlantProject(project) {
+    if (!farmProjects.find(fp => fp.id === project.id)) {
+        const plantedProject = {
+            ...project,
+            planted: true,
+            progress: 0,
+            plantedAt: Date.now()
+        };
+        
+        farmProjects.push(plantedProject);
+        updateFarmStats();
+        renderFarmProjects();
+        
+        showNotification(`Проект "${project.name}" успешно посажен! 🌱`);
+        saveUserProgress();
+        
+        // Симуляция перехода по партнерской ссылке
+        window.open('https://example.com/airdrop?ref=cryptofarm', '_blank');
+        closeProjectModal();
+    } else {
+        showNotification('Проект уже посажен на ферме!');
+    }
 }
 
 // Дополнительные функции для улучшения UX
@@ -450,6 +622,7 @@ function closeModal() {
     document.querySelectorAll('.modal').forEach(modal => {
         modal.classList.add('hidden');
     });
+    closeProjectModal();
 }
 
 // Функция для анимации при загрузке

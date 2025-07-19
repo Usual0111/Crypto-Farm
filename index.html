@@ -21,11 +21,25 @@
                         <h1 class="hero-title">🌱 CRYPTO FARM</h1>
                         <p class="hero-subtitle">Выращивайте крипто-проекты и собирайте урожай токенов!</p>
                         
-                        <div id="login-section">
-                            <button id="login-btn" class="btn-primary">
-                                🔐 Войти через Google
-                            </button>
-                        </div>
+                        <div id="auth-section">
+    <div id="login-form" class="auth-form">
+        <h3>Вход</h3>
+        <input type="email" id="login-email" placeholder="Email" required>
+        <input type="password" id="login-password" placeholder="Пароль" required>
+        <button id="login-btn" class="btn-primary">Войти</button>
+        <p>Нет аккаунта? <a href="#" id="show-register">Регистрация</a></p>
+    </div>
+    
+    <div id="register-form" class="auth-form hidden">
+        <h3>Регистрация</h3>
+        <input type="text" id="register-name" placeholder="Имя" required>
+        <input type="email" id="register-email" placeholder="Email" required>
+        <input type="password" id="register-password" placeholder="Пароль" required>
+        <input type="password" id="register-confirm" placeholder="Подтвердите пароль" required>
+        <button id="register-btn" class="btn-primary">Создать аккаунт</button>
+        <p>Есть аккаунт? <a href="#" id="show-login">Войти</a></p>
+    </div>
+</div>
                       
                       <div id="main-content" class="main-content hidden">
                         
@@ -98,6 +112,10 @@
                                 <div class="stat-number" id="projects-count">0</div>
                                 <div class="stat-label">Проектов</div>
                             </div>
+<div class="user-info">
+    <div class="user-name">Добро пожаловать, <span id="current-user-name">Пользователь</span>!</div>
+    <button id="logout-btn" class="btn-secondary">Выйти</button>
+</div>
                             <div class="stat">
                                 <div class="stat-number" id="ready-count">0</div>
                                 <div class="stat-label">Готовых</div>
@@ -198,6 +216,53 @@
             <span>Рефералы</span>
         </button>
     </nav>
+
+<!-- Модальное окно проекта -->
+<div id="project-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modal-project-name">Название проекта</h2>
+            <button class="modal-close" onclick="closeProjectModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="project-details">
+                <div class="project-icon-large" id="modal-project-icon">🌱</div>
+                <div class="project-meta">
+                    <span class="project-reward" id="modal-project-reward">$10-$50</span> |
+                    <span id="modal-project-deadline">15 дней</span> |
+                    <span id="modal-project-difficulty">Легко</span>
+                </div>
+            </div>
+            
+            <div class="project-link-section">
+                <button class="btn-external" id="modal-project-link">
+                    🔗 Перейти на сайт проекта
+                </button>
+            </div>
+            
+            <div class="checklist-section">
+                <h3>📋 Чеклист заданий:</h3>
+                <div class="checklist" id="modal-checklist">
+                    <label class="checklist-item">
+                        <input type="checkbox"> Зарегистрироваться на сайте
+                    </label>
+                    <label class="checklist-item">
+                        <input type="checkbox"> Подключить кошелёк
+                    </label>
+                    <label class="checklist-item">
+                        <input type="checkbox"> Выполнить первое действие
+                    </label>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn-primary" id="modal-plant-btn">
+                    ✅ Посадить и начать выполнение
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
     <!-- Уведомления -->
     <div id="notifications" class="notifications"></div>

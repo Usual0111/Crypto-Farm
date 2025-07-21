@@ -881,6 +881,44 @@ body {
     text-align: center;
 }
 
+/* Пользовательская панель */
+.user-panel {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 0.5rem 1rem;
+    border-radius: 2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border: 2px solid #e5e7eb;
+    z-index: 100;
+    font-size: 0.9rem;
+}
+
+.user-panel .user-name {
+    color: #374151;
+    font-weight: 500;
+}
+
+.btn-logout {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 1rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.btn-logout:hover {
+    background: #dc2626;
+}
+
 /* Адаптивность */
 @media (max-width: 768px) {
     .hero-title {

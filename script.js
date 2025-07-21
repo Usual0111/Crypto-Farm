@@ -220,6 +220,7 @@ function loginUser(user) {
     document.getElementById('main-content').classList.remove('hidden');
     document.getElementById('navigation').classList.remove('hidden');
     document.getElementById('current-user-name').textContent = user.name;
+  document.getElementById('user-panel').classList.remove('hidden');
     
     updateFarmStats();
     renderFarmProjects();
@@ -235,6 +236,7 @@ function logout() {
     document.getElementById('auth-section').classList.remove('hidden');
     document.getElementById('main-content').classList.add('hidden');
     document.getElementById('navigation').classList.add('hidden');
+  document.getElementById('user-panel').classList.add('hidden');
     
     showPage('home');
     showNotification('Вы вышли из системы');
@@ -593,7 +595,7 @@ function confirmPlantProject(project) {
         saveUserProgress();
         
         // Симуляция перехода по партнерской ссылке
-        window.open('https://example.com/airdrop?ref=cryptofarm', '_blank');
+        
         closeProjectModal();
     } else {
         showNotification('Проект уже посажен на ферме!');

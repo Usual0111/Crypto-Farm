@@ -13,16 +13,64 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+// Слушатель состояния авторизации
+auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        // Пользователь авторизован
+        try {
+            // Загружаем данные пользователя из Firestore
+            const userDoc = await db.collection('users').doc(user.uid).get();
+            let userName = user.email.split('@')[0]; // По умолчанию
+            
+            if (userDoc.exists) {
+                userName = userDoc.data().name || userName;
+            }
+            
+            currentUser = {
+                id: user.uid,
+                name: userName,
+                email: user.email
+            };
+            isLoggedIn = true;
+            
+            // Показываем интерфейс
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('main-content').classList.remove('hidden');
+            document.getElementById('navigation').classList.remove('hidden');
+            document.getElementById('user-panel').classList.remove('hidden');
+            document.getElementById('current-user-name').textContent = currentUser.name;
+            
+            // Загружаем проекты пользователя
+            await loadUserFarm();
+            updateFarmStats();
+            renderFarmProjects();
+            
+            showNotification(`Добро пожаловать, ${currentUser.name}! 🎉`);
+        } catch (error) {
+            console.error('Ошибка загрузки данных пользователя:', error);
+        }
+    } else {
+        // Пользователь не авторизован
+        isLoggedIn = false;
+        currentUser = null;
+        farmProjects = [];
+        
+        // Показываем форму авторизации
+        document.getElementById('auth-section').classList.remove('hidden');
+        document.getElementById('main-content').classList.add('hidden');
+        document.getElementById('navigation').classList.add('hidden');
+        document.getElementById('user-panel').classList.add('hidden');
+        
+        showPage('home');
+    }
+});
+
 // Глобальные переменные
 let currentPage = 'home';
 let isLoggedIn = false;
 let currentUser = null;
 let farmProjects = [];
 let notifications = [];
-
-// Система пользователей (имитация базы данных)
-let users = [];
-let userProjects = {};
 
 // Данные проектов
 const projects = [
@@ -173,7 +221,7 @@ function setupEventListeners() {
     });
 }
 
-function handleLogin() {
+async function handleLogin() {
     const email = document.getElementById('login-email').value;
     const password = document.getElementById('login-password').value;
     
@@ -182,15 +230,16 @@ function handleLogin() {
         return;
     }
     
-    const user = users.find(u => u.email === email && u.password === password);
-    if (user) {
-        loginUser(user);
-    } else {
+    try {
+        await auth.signInWithEmailAndPassword(email, password);
+        // Пользователь автоматически войдет через onAuthStateChanged
+    } catch (error) {
+        console.error('Ошибка входа:', error);
         showNotification('Неверный email или пароль!');
     }
 }
 
-function handleRegister() {
+async function handleRegister() {
     const name = document.getElementById('register-name').value;
     const email = document.getElementById('register-email').value;
     const password = document.getElementById('register-password').value;
@@ -206,55 +255,36 @@ function handleRegister() {
         return;
     }
     
-    if (users.find(u => u.email === email)) {
-        showNotification('Пользователь с таким email уже существует!');
-        return;
+    try {
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+        
+        // Сохраняем имя пользователя в Firestore
+        await db.collection('users').doc(user.uid).set({
+            name: name,
+            email: email,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        // Пользователь автоматически войдет через onAuthStateChanged
+    } catch (error) {
+        console.error('Ошибка регистрации:', error);
+        if (error.code === 'auth/email-already-in-use') {
+            showNotification('Пользователь с таким email уже существует!');
+        } else {
+            showNotification('Ошибка при регистрации!');
+        }
     }
-    
-    const newUser = {
-        id: Date.now(),
-        name: name,
-        email: email,
-        password: password,
-        createdAt: Date.now()
-    };
-    
-    users.push(newUser);
-    userProjects[newUser.id] = [];
-    saveToStorage();
-    
-    loginUser(newUser);
 }
 
-function loginUser(user) {
-    currentUser = user;
-    isLoggedIn = true;
-    farmProjects = userProjects[user.id] || [];
-    
-    document.getElementById('auth-section').classList.add('hidden');
-    document.getElementById('main-content').classList.remove('hidden');
-    document.getElementById('navigation').classList.remove('hidden');
-    document.getElementById('current-user-name').textContent = user.name;
-  document.getElementById('user-panel').classList.remove('hidden');
-    
-    updateFarmStats();
-    renderFarmProjects();
-    showNotification(`Добро пожаловать, ${user.name}! 🎉`);
-}
-
-function logout() {
-    saveUserProgress();
-    currentUser = null;
-    isLoggedIn = false;
-    farmProjects = [];
-    
-    document.getElementById('auth-section').classList.remove('hidden');
-    document.getElementById('main-content').classList.add('hidden');
-    document.getElementById('navigation').classList.add('hidden');
-  document.getElementById('user-panel').classList.add('hidden');
-    
-    showPage('home');
-    showNotification('Вы вышли из системы');
+async function logout() {
+    try {
+        await auth.signOut();
+        // Остальное произойдет через onAuthStateChanged
+    } catch (error) {
+        console.error('Ошибка выхода:', error);
+        showNotification('Ошибка при выходе');
+    }
 }
 
 function showRegisterForm() {
@@ -385,35 +415,39 @@ function plantProject(projectId) {
     }
 }
        
-function saveUserProgress() {
-    if (currentUser && isLoggedIn) {
-        userProjects[currentUser.id] = farmProjects;
-        saveToStorage();
+async function saveUserProgress() {
+    await saveToStorage();
+}
+
+async function saveToStorage() {
+    if (!currentUser || !isLoggedIn) return;
+    
+    try {
+        await db.collection('userFarms').doc(currentUser.id).set({
+            projects: farmProjects,
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        console.log('Данные сохранены в Firestore');
+    } catch (error) {
+        console.error('Ошибка сохранения:', error);
     }
 }
 
-function saveToStorage() {
-    // В реальном приложении здесь был бы API запрос
-    const data = {
-        users: users,
-        userProjects: userProjects
-    };
-    console.log('Данные сохранены:', data);
-}
-
-function loadFromStorage() {
-    // В реальном приложении здесь была бы загрузка из API
-    // Для демонстрации создаем тестового пользователя
-    if (users.length === 0) {
-        const testUser = {
-            id: 1,
-            name: 'Тестовый пользователь',
-            email: 'test@example.com',
-            password: '123456',
-            createdAt: Date.now()
-        };
-        users.push(testUser);
-        userProjects[testUser.id] = [];
+async function loadUserFarm() {
+    if (!currentUser || !isLoggedIn) return;
+    
+    try {
+        const doc = await db.collection('userFarms').doc(currentUser.id).get();
+        if (doc.exists) {
+            const data = doc.data();
+            farmProjects = data.projects || [];
+        } else {
+            farmProjects = [];
+        }
+        console.log('Данные загружены из Firestore');
+    } catch (error) {
+        console.error('Ошибка загрузки:', error);
+        farmProjects = [];
     }
 }
 

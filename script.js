@@ -1,3 +1,18 @@
+// Firebase конфигурация 
+const firebaseConfig = {
+  apiKey: "AIzaSyA82ux8W1khadz3sU6r9m6m3hs7qUcUafs",
+  authDomain: "crypto-farmer-c2783.firebaseapp.com",
+  projectId: "crypto-farmer-c2783",
+  storageBucket: "crypto-farmer-c2783.firebasestorage.app",
+  messagingSenderId: "103318616150",
+  appId: "1:103318616150:web:eb6e6d7a24aa6b45d1a3f7"
+};
+
+// Инициализация Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
 // Глобальные переменные
 let currentPage = 'home';
 let isLoggedIn = false;

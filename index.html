@@ -9,6 +9,11 @@
 </head>
 <body>
     <div id="app">
+      <!-- Пользовательская панель -->
+<div id="user-panel" class="user-panel hidden">
+    <div class="user-name">👋 <span id="current-user-name">Пользователь</span></div>
+    <button id="logout-btn" class="btn-logout">Выйти</button>
+</div>
         <!-- Главная страница -->
         <div id="home-page" class="page active">
             <div class="hero-bg">
@@ -112,10 +117,7 @@
                                 <div class="stat-number" id="projects-count">0</div>
                                 <div class="stat-label">Проектов</div>
                             </div>
-<div class="user-info">
-    <div class="user-name">Добро пожаловать, <span id="current-user-name">Пользователь</span>!</div>
-    <button id="logout-btn" class="btn-secondary">Выйти</button>
-</div>
+
                             <div class="stat">
                                 <div class="stat-number" id="ready-count">0</div>
                                 <div class="stat-label">Готовых</div>

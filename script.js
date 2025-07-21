@@ -176,9 +176,7 @@ const news = [
     }
 ];
 
-// Инициализация приложения
 document.addEventListener('DOMContentLoaded', function() {
-    loadFromStorage();
     initializeApp();
     setupEventListeners();
     startProgressUpdater();

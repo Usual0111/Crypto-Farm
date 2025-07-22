@@ -65,6 +65,135 @@ auth.onAuthStateChanged(async (user) => {
     }
 });
 
+// Админ-функции
+const ADMIN_EMAIL = 'plyxlux@gmail.com'; // Замени на свой email
+let isAdmin = false;
+let currentEditingProject = null;
+let uploadedImages = {};
+
+// Проверка админских прав
+function checkAdminRights() {
+    const user = firebase.auth().currentUser;
+    if (user && user.email === ADMIN_EMAIL) {
+        isAdmin = true;
+        showAdminControls();
+    } else {
+        isAdmin = false;
+        hideAdminControls();
+    }
+}
+
+function showAdminControls() {
+    document.querySelectorAll('.admin-controls').forEach(el => el.classList.add('show'));
+    addAdminButtonsToProjects();
+    addAdminButtonsToNews();
+}
+
+function hideAdminControls() {
+    document.querySelectorAll('.admin-controls').forEach(el => el.classList.remove('show'));
+    removeAdminButtonsFromProjects();
+    removeAdminButtonsFromNews();
+}
+
+// Добавление админ-кнопок к проектам
+function addAdminButtonsToProjects() {
+    document.querySelectorAll('.project-card').forEach(card => {
+        if (!card.querySelector('.admin-project-controls')) {
+            const adminControls = document.createElement('div');
+            adminControls.className = 'admin-project-controls admin-controls show';
+            adminControls.innerHTML = `
+                <button class="admin-btn" onclick="editProject(this)">✏️ Редактировать</button>
+            `;
+            card.appendChild(adminControls);
+        }
+    });
+}
+
+function removeAdminButtonsFromProjects() {
+    document.querySelectorAll('.admin-project-controls').forEach(el => el.remove());
+}
+
+// Добавление админ-кнопок к новостям
+function addAdminButtonsToNews() {
+    document.querySelectorAll('.news-card').forEach(card => {
+        if (!card.querySelector('.admin-news-controls')) {
+            const adminControls = document.createElement('div');
+            adminControls.className = 'admin-news-controls admin-controls show';
+            adminControls.innerHTML = `
+                <button class="admin-btn" onclick="deleteNews(this)" style="background: #ff6b6b;">🗑 Удалить</button>
+            `;
+            card.appendChild(adminControls);
+        }
+    });
+}
+
+function removeAdminButtonsFromNews() {
+    document.querySelectorAll('.admin-news-controls').forEach(el => el.remove());
+}
+
+// Функции для работы с изображениями
+function handleImageUpload(input, type) {
+    const file = input.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            uploadedImages[type] = e.target.result;
+            
+            if (type === 'new-project') {
+                const preview = document.getElementById('new-project-preview');
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            } else if (type === 'project') {
+                const currentImage = document.getElementById('current-project-image');
+                currentImage.src = e.target.result;
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+// Модальные окна
+function openAddProjectModal() {
+    document.getElementById('add-project-modal').classList.remove('hidden');
+}
+
+function closeAddProjectModal() {
+    document.getElementById('add-project-modal').classList.add('hidden');
+    clearAddProjectForm();
+}
+
+function openAddNewsModal() {
+    document.getElementById('add-news-modal').classList.remove('hidden');
+}
+
+function closeAddNewsModal() {
+    document.getElementById('add-news-modal').classList.add('hidden');
+    clearAddNewsForm();
+}
+
+function clearAddProjectForm() {
+    document.getElementById('new-project-name').value = '';
+    document.getElementById('new-project-reward').value = '';
+    document.getElementById('new-project-deadline').value = '';
+    document.getElementById('new-project-link').value = '';
+    document.getElementById('new-project-checklist').value = '';
+    document.getElementById('new-project-preview').style.display = 'none';
+    delete uploadedImages['new-project'];
+}
+
+function clearAddNewsForm() {
+    document.getElementById('new-news-title').value = '';
+    document.getElementById('new-news-content').value = '';
+    document.getElementById('new-news-date').value = '';
+}
+
+// Вызывать проверку админских прав при входе
+firebase.auth().onAuthStateChanged(function(user) {
+    if (user) {
+        checkAdminRights();
+    }
+});
+
 // Глобальные переменные
 let currentPage = 'home';
 let isLoggedIn = false;
@@ -781,4 +910,216 @@ if (typeof module !== 'undefined' && module.exports) {
         validateProject,
         formatTime
     };
+}
+
+// Добавить эти функции в script.js
+
+// Редактирование проекта
+function editProject(button) {
+    const projectCard = button.closest('.project-card');
+    
+    // Безопасно получаем данные проекта
+    const projectNameEl = projectCard.querySelector('.project-name, h3, .project-title');
+    const projectRewardEl = projectCard.querySelector('.reward, .project-reward');
+    const projectImageEl = projectCard.querySelector('.project-icon, img');
+    
+    // Сохраняем ссылку на редактируемый проект
+    currentEditingProject = projectCard;
+    
+    // Заполняем поля редактирования (с проверкой на существование элементов)
+    if (projectNameEl) document.getElementById('edit-project-name').value = projectNameEl.textContent || '';
+    if (projectRewardEl) document.getElementById('edit-project-reward').value = projectRewardEl.textContent || '';
+    if (projectImageEl) document.getElementById('current-project-image').src = projectImageEl.src || '';
+    
+    // Показываем проект в модальном окне и сразу показываем админ-секцию
+    openProjectModal(projectCard);
+    document.getElementById('admin-edit-section').style.display = 'block';
+}
+
+// Сохранение изменений проекта
+function saveProjectChanges() {
+    if (!currentEditingProject) return;
+    
+    const newName = document.getElementById('edit-project-name').value;
+    const newReward = document.getElementById('edit-project-reward').value;
+    const newCategory = document.getElementById('edit-project-category').value;
+    const newDeadline = document.getElementById('edit-project-deadline').value;
+    const newDifficulty = document.getElementById('edit-project-difficulty').value;
+    const newLink = document.getElementById('edit-project-link').value;
+    const newChecklist = document.getElementById('edit-project-checklist').value;
+    
+    // Обновляем элементы в карточке проекта
+    currentEditingProject.querySelector('.project-name').textContent = newName;
+    currentEditingProject.querySelector('.reward').textContent = newReward;
+    currentEditingProject.querySelector('.category-tag').textContent = newCategory.toUpperCase();
+    currentEditingProject.querySelector('.deadline').textContent = newDeadline;
+    currentEditingProject.querySelector('.difficulty').textContent = newDifficulty;
+    
+    // Если загружено новое изображение
+    if (uploadedImages['project']) {
+        currentEditingProject.querySelector('.project-icon').src = uploadedImages['project'];
+        delete uploadedImages['project'];
+    }
+    
+    // Обновляем ссылку
+    const projectLink = currentEditingProject.querySelector('a') || currentEditingProject;
+    if (newLink) {
+        projectLink.href = newLink;
+    }
+    
+    alert('Проект обновлен!');
+    closeProjectModal();
+    currentEditingProject = null;
+}
+
+// Удаление проекта
+function deleteProject() {
+    if (!currentEditingProject) return;
+    
+    if (confirm('Вы уверены, что хотите удалить этот проект?')) {
+        currentEditingProject.remove();
+        alert('Проект удален!');
+        closeProjectModal();
+        currentEditingProject = null;
+    }
+}
+
+// Добавление нового проекта
+function addNewProject() {
+    const name = document.getElementById('new-project-name').value;
+    const category = document.getElementById('new-project-category').value;
+    const reward = document.getElementById('new-project-reward').value;
+    const deadline = document.getElementById('new-project-deadline').value;
+    const difficulty = document.getElementById('new-project-difficulty').value;
+    const link = document.getElementById('new-project-link').value;
+    const checklist = document.getElementById('new-project-checklist').value;
+    
+    if (!name || !reward) {
+        alert('Заполните обязательные поля: название и награда');
+        return;
+    }
+    
+    // Создаем новую карточку проекта
+    const projectsGrid = document.querySelector('.projects-grid');
+    const newProjectCard = document.createElement('div');
+    newProjectCard.className = `project-card ${category}`;
+    
+    const imageUrl = uploadedImages['new-project'] || 'https://via.placeholder.com/60';
+    
+    newProjectCard.innerHTML = `
+        <div class="project-header">
+            <img src="${imageUrl}" alt="${name}" class="project-icon">
+            <div class="project-info">
+                <h3 class="project-name">${name}</h3>
+                <span class="category-tag ${category}">${category.toUpperCase()}</span>
+            </div>
+        </div>
+        <div class="project-details">
+            <div class="detail-row">
+                <span class="detail-label">💰 Награда:</span>
+                <span class="reward">${reward}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">⏰ Дедлайн:</span>
+                <span class="deadline">${deadline}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">📊 Сложность:</span>
+                <span class="difficulty">${difficulty}</span>
+            </div>
+        </div>
+        <button class="btn-primary" onclick="openProjectModal(this.parentElement)">
+            Подробнее →
+        </button>
+    `;
+    
+    // Если есть ссылка, делаем карточку кликабельной
+    if (link) {
+        const linkElement = document.createElement('a');
+        linkElement.href = link;
+        linkElement.target = '_blank';
+        linkElement.style.textDecoration = 'none';
+        linkElement.appendChild(newProjectCard.cloneNode(true));
+        projectsGrid.appendChild(linkElement);
+    } else {
+        projectsGrid.appendChild(newProjectCard);
+    }
+    
+    // Добавляем админ-кнопки к новому проекту, если пользователь админ
+    if (isAdmin) {
+        addAdminButtonsToProjects();
+    }
+    
+    alert('Новый проект добавлен!');
+    closeAddProjectModal();
+}
+
+// Добавление новости
+function addNewNews() {
+    const title = document.getElementById('new-news-title').value;
+    const content = document.getElementById('new-news-content').value;
+    const date = document.getElementById('new-news-date').value;
+    
+    if (!title || !content) {
+        alert('Заполните обязательные поля: заголовок и содержание');
+        return;
+    }
+    
+    // Создаем новую карточку новости
+    const newsContainer = document.querySelector('.news-grid');
+    const newNewsCard = document.createElement('div');
+    newNewsCard.className = 'news-card';
+    
+    newNewsCard.innerHTML = `
+        <div class="news-header">
+            <h3>${title}</h3>
+            <span class="news-date">${date || 'Только что'}</span>
+        </div>
+        <p>${content}</p>
+    `;
+    
+    // Вставляем в начало списка новостей
+    newsContainer.insertBefore(newNewsCard, newsContainer.firstChild);
+    
+    // Добавляем админ-кнопки к новой новости, если пользователь админ
+    if (isAdmin) {
+        addAdminButtonsToNews();
+    }
+    
+    alert('Новость добавлена!');
+    closeAddNewsModal();
+}
+
+// Удаление новости
+function deleteNews(button) {
+    const newsCard = button.closest('.news-card');
+    
+    if (confirm('Вы уверены, что хотите удалить эту новость?')) {
+        newsCard.remove();
+        alert('Новость удалена!');
+    }
+}
+
+// Функция для открытия модального окна проекта (если её нет)
+function openProjectModal(projectCard) {
+    const modal = document.getElementById('project-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        // Заполняем модальное окно данными проекта
+        const projectName = projectCard.querySelector('.project-name').textContent;
+        const modalTitle = modal.querySelector('.modal-header h2');
+        if (modalTitle) {
+            modalTitle.textContent = projectName;
+        }
+    }
+}
+
+// Функция для закрытия модального окна проекта (если её нет)
+function closeProjectModal() {
+    const modal = document.getElementById('project-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        // Скрываем админ-секцию при закрытии
+        document.getElementById('admin-edit-section').style.display = 'none';
+    }
 }

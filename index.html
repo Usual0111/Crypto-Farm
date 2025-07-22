@@ -6,6 +6,18 @@
     <title>Crypto Farm - Выращивайте крипто-проекты</title>
     <link rel="stylesheet" href="styles.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  
+  <!-- Image Upload -->
+<style>
+.admin-controls { display: none; margin-top: 10px; }
+.admin-controls.show { display: flex; gap: 10px; }
+.admin-btn { padding: 5px 10px; font-size: 12px; background: #ff6b6b; color: white; border: none; border-radius: 4px; cursor: pointer; }
+.add-project-btn { margin: 20px 0; padding: 10px 20px; background: #4ecdc4; color: white; border: none; border-radius: 5px; cursor: pointer; }
+.image-upload { margin: 10px 0; }
+.image-upload input[type="file"] { margin: 5px 0; }
+.current-image { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; margin: 5px 0; }
+</style>
+  
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -105,6 +117,10 @@
                         </div>
                     </div>
                     
+                  <div id="admin-add-project" class="admin-controls">
+    <button class="add-project-btn" onclick="openAddProjectModal()">➕ Добавить проект</button>
+</div>
+                  
                     <div class="projects-grid" id="store-projects"></div>
                 </div>
             </div>
@@ -151,6 +167,10 @@
                 <div class="container">
                     <div class="text-center">
                         <h1 class="page-title">📰 Новости</h1>
+                      
+                      <div id="admin-add-news" class="admin-controls">
+    <button class="add-project-btn" onclick="openAddNewsModal()">➕ Добавить новость</button>
+</div>
                     </div>
                     
                     <div class="news-list" id="news-full-list"></div>
@@ -265,6 +285,91 @@
                 <button class="btn-primary" id="modal-plant-btn">
                     ✅ Посадить и начать выполнение
                 </button>
+            </div>
+          
+          <!-- Админ-панель редактирования -->
+<div id="admin-edit-section" class="admin-controls" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+    <h4>🛠 Редактирование проекта</h4>
+    
+    <div class="image-upload">
+        <label>Иконка проекта:</label>
+        <img id="current-project-image" class="current-image" src="" alt="Текущее изображение">
+        <input type="file" id="project-image-upload" accept="image/*" onchange="handleImageUpload(this, 'project')">
+    </div>
+    
+    <input type="text" id="edit-project-name" placeholder="Название проекта" style="width: 100%; margin: 5px 0; padding: 8px;">
+    <select id="edit-project-category" style="width: 100%; margin: 5px 0; padding: 8px;">
+        <option value="defi">DeFi</option>
+        <option value="nft">NFT</option>
+        <option value="gamefi">GameFi</option>
+    </select>
+    <input type="text" id="edit-project-reward" placeholder="Награда (например: $10-$50)" style="width: 100%; margin: 5px 0; padding: 8px;">
+    <input type="text" id="edit-project-deadline" placeholder="Дедлайн (например: 15 дней)" style="width: 100%; margin: 5px 0; padding: 8px;">
+    <select id="edit-project-difficulty" style="width: 100%; margin: 5px 0; padding: 8px;">
+        <option value="Легко">Легко</option>
+        <option value="Средне">Средне</option>
+        <option value="Сложно">Сложно</option>
+    </select>
+    <input type="url" id="edit-project-link" placeholder="Ссылка на проект" style="width: 100%; margin: 5px 0; padding: 8px;">
+    <textarea id="edit-project-checklist" placeholder="Чеклист (каждый пункт с новой строки)" style="width: 100%; margin: 5px 0; padding: 8px; height: 80px;"></textarea>
+    
+    <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <button class="admin-btn" onclick="saveProjectChanges()" style="background: #4ecdc4;">💾 Сохранить</button>
+        <button class="admin-btn" onclick="deleteProject()" style="background: #ff6b6b;">🗑 Удалить</button>
+    </div>
+</div>
+  
+  <!-- Модальное окно добавления проекта -->
+<div id="add-project-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>➕ Добавить новый проект</h2>
+            <button class="modal-close" onclick="closeAddProjectModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="image-upload">
+                <label>Иконка проекта:</label>
+                <input type="file" id="new-project-image" accept="image/*" onchange="handleImageUpload(this, 'new-project')">
+                <img id="new-project-preview" class="current-image" src="" alt="Превью" style="display: none;">
+            </div>
+            
+            <input type="text" id="new-project-name" placeholder="Название проекта" style="width: 100%; margin: 5px 0; padding: 8px;">
+            <select id="new-project-category" style="width: 100%; margin: 5px 0; padding: 8px;">
+                <option value="defi">DeFi</option>
+                <option value="nft">NFT</option>
+                <option value="gamefi">GameFi</option>
+            </select>
+            <input type="text" id="new-project-reward" placeholder="Награда (например: $10-$50)" style="width: 100%; margin: 5px 0; padding: 8px;">
+            <input type="text" id="new-project-deadline" placeholder="Дедлайн (например: 15 дней)" style="width: 100%; margin: 5px 0; padding: 8px;">
+            <select id="new-project-difficulty" style="width: 100%; margin: 5px 0; padding: 8px;">
+                <option value="Легко">Легко</option>
+                <option value="Средне">Средне</option>
+                <option value="Сложно">Сложно</option>
+            </select>
+            <input type="url" id="new-project-link" placeholder="Ссылка на проект" style="width: 100%; margin: 5px 0; padding: 8px;">
+            <textarea id="new-project-checklist" placeholder="Чеклист (каждый пункт с новой строки)" style="width: 100%; margin: 5px 0; padding: 8px; height: 80px;"></textarea>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn-primary" onclick="addNewProject()">✅ Создать проект</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно добавления новости -->
+<div id="add-news-modal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>📰 Добавить новость</h2>
+            <button class="modal-close" onclick="closeAddNewsModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <input type="text" id="new-news-title" placeholder="Заголовок новости" style="width: 100%; margin: 5px 0; padding: 8px;">
+            <textarea id="new-news-content" placeholder="Текст новости" style="width: 100%; margin: 5px 0; padding: 8px; height: 100px;"></textarea>
+            <input type="text" id="new-news-date" placeholder="Дата (например: 2 дня назад)" style="width: 100%; margin: 5px 0; padding: 8px;">
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn-primary" onclick="addNewNews()">✅ Создать новость</button>
             </div>
         </div>
     </div>

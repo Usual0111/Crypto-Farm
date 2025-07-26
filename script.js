@@ -1025,8 +1025,8 @@ async function saveProjectChanges() {
         delete uploadedImages['project'];
     }
     
-    // Также обновляем в массиве projects для консистентности
-    const project = projects.find(p => p.name === currentEditingProject.querySelector('.project-name').textContent);
+   // Также обновляем в массиве projects для консистентности
+   const project = projects.find(p => p.name === nameElement.textContent);
     if (project) {
         project.name = newName;
         project.type = newCategory;
@@ -1035,20 +1035,32 @@ async function saveProjectChanges() {
         project.difficulty = newDifficulty;
     }
     
-    showNotification('Проект успешно обновлен! ✅');
+    showNotification('Проект успешно обновлен и сохранен в базе! ✅');
     closeProjectModal();
 
 // Сохраняем изменения в Firebase
-// ГЛАВНОЕ: Сохраняем в Firebase
-try {
-    await db.collection('projects').doc(project.id.toString()).set(project);
-    showNotification('Проект успешно обновлен и сохранен! ✅');
-    console.log('Проект сохранен в Firebase:', project);
-} catch (error) {
-    console.error('Ошибка сохранения проекта в Firebase:', error);
-    showNotification('Ошибка сохранения в базу данных ❌');
-    return;
-}
+// Сохраняем в Firebase ПЕРЕД закрытием модала
+    try {
+        const projectToSave = {
+            id: project.id,
+            name: newName,
+            type: newCategory,
+            reward: newReward,
+            deadline: newDeadline,
+            difficulty: newDifficulty,
+            popular: project.popular,
+            planted: project.planted || false,
+            progress: project.progress || 0,
+            icon: project.icon
+        };
+        
+        await db.collection('projects').doc(project.id.toString()).set(projectToSave);
+        console.log('Проект сохранен в Firebase:', projectToSave);
+    } catch (error) {
+        console.error('Ошибка сохранения проекта в Firebase:', error);
+        showNotification('Ошибка сохранения в базу данных ❌');
+        return;
+    }
     currentEditingProject = null;
 }
 

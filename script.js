@@ -312,6 +312,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeApp() {
+    loadProjectsFromFirebase();
     renderPopularProjects();
     renderNews();
     renderStoreProjects();
@@ -1015,7 +1016,49 @@ function saveProjectChanges() {
     
     showNotification('Проект успешно обновлен! ✅');
     closeProjectModal();
+
+// Сохраняем изменения в Firebase
+if (project) {
+    saveProjectToFirebase(project);
+}
     currentEditingProject = null;
+}
+
+// Сохранение проекта в Firebase
+async function saveProjectToFirebase(project) {
+    try {
+        await db.collection('projects').doc(project.id.toString()).set(project);
+        console.log('Проект сохранен в Firebase');
+    } catch (error) {
+        console.error('Ошибка сохранения проекта:', error);
+        showNotification('Ошибка сохранения проекта ❌');
+    }
+}
+
+// Загрузка проектов из Firebase
+async function loadProjectsFromFirebase() {
+    try {
+        const snapshot = await db.collection('projects').get();
+        const firebaseProjects = [];
+        
+        snapshot.forEach(doc => {
+            firebaseProjects.push(doc.data());
+        });
+        
+        // Объединяем с исходными проектами (Firebase имеет приоритет)
+        firebaseProjects.forEach(fbProject => {
+            const index = projects.findIndex(p => p.id === fbProject.id);
+            if (index !== -1) {
+                projects[index] = fbProject;
+            }
+        });
+        
+        // Перерендериваем проекты
+        renderStoreProjects();
+        renderPopularProjects();
+    } catch (error) {
+        console.error('Ошибка загрузки проектов:', error);
+    }
 }
 
 // Удаление проекта

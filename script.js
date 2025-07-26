@@ -921,34 +921,30 @@ function editProject(button) {
     // Извлекаем данные из DOM элементов
     const titleElement = projectCard.querySelector('h3');
     const imgElement = projectCard.querySelector('img');
-    const categoryElement = projectCard.querySelector('.category-tag');
     
-    // Ищем элементы с данными через текстовое содержимое
-    const detailRows = projectCard.querySelectorAll('.detail-row');
-    let reward = '', deadline = '', difficulty = '';
-    
-    detailRows.forEach(row => {
-        const label = row.querySelector('.detail-label');
-        const value = row.querySelector('span:last-child');
-        if (label && value) {
-            const labelText = label.textContent.trim();
-            if (labelText.includes('Награда')) reward = value.textContent.trim();
-            if (labelText.includes('Дедлайн')) deadline = value.textContent.trim();
-            if (labelText.includes('Сложность')) difficulty = value.textContent.trim();
-        }
+// Находим проект в массиве projects по названию
+const projectName = titleElement ? titleElement.textContent.trim() : '';
+const project = projects.find(p => p.name === projectName);
+
+if (project) {
+    reward = project.reward;
+    deadline = project.deadline;
+    difficulty = project.difficulty;
+}
     });
     
     currentEditingProject = projectCard;
+const project = projects.find(p => p.name === (titleElement ? titleElement.textContent.trim() : ''));
     
     // Заполняем поля
-    document.getElementById('edit-project-name').value = titleElement ? titleElement.textContent.trim() : '';
-    document.getElementById('edit-project-reward').value = reward;
-    document.getElementById('edit-project-deadline').value = deadline;
-    document.getElementById('edit-project-difficulty').value = difficulty || 'Легко';
-    document.getElementById('edit-project-category').value = categoryElement ? categoryElement.textContent.toLowerCase() : 'defi';
-    document.getElementById('edit-project-link').value = '';
-    document.getElementById('edit-project-checklist').value = '';
-    
+document.getElementById('edit-project-name').value = project ? project.name : '';
+document.getElementById('edit-project-reward').value = project ? project.reward : '';
+document.getElementById('edit-project-deadline').value = project ? project.deadline : '';
+document.getElementById('edit-project-difficulty').value = project ? project.difficulty : 'Легко';
+document.getElementById('edit-project-category').value = project ? project.type.toLowerCase() : 'defi';
+document.getElementById('edit-project-link').value = 'https://example.com'; // дефолтная ссылка
+document.getElementById('edit-project-checklist').value = 'Зарегистрироваться на сайте\nПодключить кошелёк\nВыполнить первое действие';
+  
     if (imgElement) {
         document.getElementById('current-project-image').src = imgElement.src;
     }

@@ -915,6 +915,7 @@ if (typeof module !== 'undefined' && module.exports) {
 // Добавить эти функции в script.js
 
 // Редактирование проекта
+// Редактирование проекта
 function editProject(button) {
     const projectCard = button.closest('.project-card');
     
@@ -922,23 +923,21 @@ function editProject(button) {
     const titleElement = projectCard.querySelector('h3');
     const imgElement = projectCard.querySelector('img');
     
-// Находим проект в массиве projects по названию
-const projectName = titleElement ? titleElement.textContent.trim() : '';
-const project = projects.find(p => p.name === projectName);
-
-  const project = projects.find(p => p.name === (titleElement ? titleElement.textContent.trim() : ''));
+    // Находим проект в массиве projects по названию
+    const projectName = titleElement ? titleElement.textContent.trim() : '';
+    const project = projects.find(p => p.name === projectName);
+    
     currentEditingProject = projectCard;
-
     
     // Заполняем поля
-document.getElementById('edit-project-name').value = project ? project.name : '';
-document.getElementById('edit-project-reward').value = project ? project.reward : '';
-document.getElementById('edit-project-deadline').value = project ? project.deadline : '';
-document.getElementById('edit-project-difficulty').value = project ? project.difficulty : 'Легко';
-document.getElementById('edit-project-category').value = project ? project.type.toLowerCase() : 'defi';
-document.getElementById('edit-project-link').value = 'https://example.com'; // дефолтная ссылка
-document.getElementById('edit-project-checklist').value = 'Зарегистрироваться на сайте\nПодключить кошелёк\nВыполнить первое действие';
-  
+    document.getElementById('edit-project-name').value = project ? project.name : '';
+    document.getElementById('edit-project-reward').value = project ? project.reward : '';
+    document.getElementById('edit-project-deadline').value = project ? project.deadline : '';
+    document.getElementById('edit-project-difficulty').value = project ? project.difficulty : 'Легко';
+    document.getElementById('edit-project-category').value = project ? project.type.toLowerCase() : 'defi';
+    document.getElementById('edit-project-link').value = 'https://example.com'; // дефолтная ссылка
+    document.getElementById('edit-project-checklist').value = 'Зарегистрироваться на сайте\nПодключить кошелёк\nВыполнить первое действие';
+    
     if (imgElement) {
         document.getElementById('current-project-image').src = imgElement.src;
     }

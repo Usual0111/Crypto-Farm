@@ -918,28 +918,36 @@ if (typeof module !== 'undefined' && module.exports) {
 function editProject(button) {
     const projectCard = button.closest('.project-card');
     
-    // Извлекаем данные напрямую из DOM элементов карточки
+    // Извлекаем данные из DOM элементов
     const titleElement = projectCard.querySelector('h3');
     const imgElement = projectCard.querySelector('img');
-    const categoryElement = projectCard.querySelector('.category-tag, [class*="category"]');
+    const categoryElement = projectCard.querySelector('.category-tag');
     
-    // Ищем данные в тексте через регулярные выражения
-    const cardHTML = projectCard.innerHTML;
-    const rewardMatch = cardHTML.match(/Награда:[\s\S]*?<[^>]*>([^<]+)</);
-    const deadlineMatch = cardHTML.match(/Дедлайн:[\s\S]*?<[^>]*>([^<]+)</);
-    const difficultyMatch = cardHTML.match(/Сложность:[\s\S]*?<[^>]*>([^<]+)</);
+    // Ищем элементы с данными через текстовое содержимое
+    const detailRows = projectCard.querySelectorAll('.detail-row');
+    let reward = '', deadline = '', difficulty = '';
+    
+    detailRows.forEach(row => {
+        const label = row.querySelector('.detail-label');
+        const value = row.querySelector('span:last-child');
+        if (label && value) {
+            const labelText = label.textContent.trim();
+            if (labelText.includes('Награда')) reward = value.textContent.trim();
+            if (labelText.includes('Дедлайн')) deadline = value.textContent.trim();
+            if (labelText.includes('Сложность')) difficulty = value.textContent.trim();
+        }
+    });
     
     currentEditingProject = projectCard;
     
     // Заполняем поля
     document.getElementById('edit-project-name').value = titleElement ? titleElement.textContent.trim() : '';
-    document.getElementById('edit-project-reward').value = rewardMatch ? rewardMatch[1].trim() : '';
-    document.getElementById('edit-project-deadline').value = deadlineMatch ? deadlineMatch[1].trim() : '';
-    document.getElementById('edit-project-difficulty').value = difficultyMatch ? difficultyMatch[1].trim() : 'Легко';
-    
-    if (categoryElement) {
-        document.getElementById('edit-project-category').value = categoryElement.textContent.toLowerCase();
-    }
+    document.getElementById('edit-project-reward').value = reward;
+    document.getElementById('edit-project-deadline').value = deadline;
+    document.getElementById('edit-project-difficulty').value = difficulty || 'Легко';
+    document.getElementById('edit-project-category').value = categoryElement ? categoryElement.textContent.toLowerCase() : 'defi';
+    document.getElementById('edit-project-link').value = '';
+    document.getElementById('edit-project-checklist').value = '';
     
     if (imgElement) {
         document.getElementById('current-project-image').src = imgElement.src;

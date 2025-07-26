@@ -42,6 +42,7 @@ auth.onAuthStateChanged(async (user) => {
             
             // Загружаем проекты пользователя
             await loadUserFarm();
+            await loadProjectsFromFirebase();
             updateFarmStats();
             renderFarmProjects();
             
@@ -305,14 +306,14 @@ const news = [
     }
 ];
 
-document.addEventListener('DOMContentLoaded', function() {
-    initializeApp();
+document.addEventListener('DOMContentLoaded', async function() {
+    await initializeApp();
     setupEventListeners();
     startProgressUpdater();
 });
 
-function initializeApp() {
-    loadProjectsFromFirebase();
+async function initializeApp() {
+    await loadProjectsFromFirebase(); // Ждем загрузки
     renderPopularProjects();
     renderNews();
     renderStoreProjects();
@@ -1039,23 +1040,17 @@ async function saveProjectToFirebase(project) {
 async function loadProjectsFromFirebase() {
     try {
         const snapshot = await db.collection('projects').get();
-        const firebaseProjects = [];
         
-        snapshot.forEach(doc => {
-            firebaseProjects.push(doc.data());
-        });
-        
-        // Объединяем с исходными проектами (Firebase имеет приоритет)
-        firebaseProjects.forEach(fbProject => {
-            const index = projects.findIndex(p => p.id === fbProject.id);
-            if (index !== -1) {
-                projects[index] = fbProject;
-            }
-        });
-        
-        // Перерендериваем проекты
-        renderStoreProjects();
-        renderPopularProjects();
+        if (!snapshot.empty) {
+            snapshot.forEach(doc => {
+                const fbProject = doc.data();
+                const index = projects.findIndex(p => p.id === fbProject.id);
+                if (index !== -1) {
+                    projects[index] = fbProject; // Заменяем данные из Firebase
+                }
+            });
+            console.log('Проекты загружены из Firebase');
+        }
     } catch (error) {
         console.error('Ошибка загрузки проектов:', error);
     }

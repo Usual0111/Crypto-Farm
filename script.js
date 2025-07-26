@@ -950,6 +950,8 @@ function editProject(button) {
     const project = projects.find(p => p.name === projectName);
     
     currentEditingProject = projectCard;
+  // Сохраняем исходное имя проекта
+    projectCard.dataset.originalName = projectName;
     
     // Заполняем поля
     document.getElementById('edit-project-name').value = project ? project.name : '';
@@ -1026,7 +1028,19 @@ async function saveProjectChanges() {
     }
     
    // Также обновляем в массиве projects для консистентности
-   const project = projects.find(p => p.name === nameElement.textContent);
+   // Находим проект по исходному имени (до изменения)
+   const originalName = currentEditingProject.dataset.originalName || 
+                       currentEditingProject.querySelector('.project-name').textContent;
+   const project = projects.find(p => p.name === originalName);
+   
+   console.log('Ищем проект:', originalName);
+   console.log('Найден проект:', project);
+   
+   if (!project) {
+       console.error('Проект не найден в массиве!');
+       showNotification('Ошибка: проект не найден ❌');
+       return;
+   }
     if (project) {
         project.name = newName;
         project.type = newCategory;

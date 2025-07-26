@@ -699,14 +699,14 @@ function startProgressUpdater() {
                 project.progress = Math.min(100, project.progress + Math.random() * 2);
                 updated = true;
 
+        }
+     });
+
 if (updated && currentPage === 'farm') {
             updateFarmStats();
             renderFarmProjects();
             saveUserProgress();
-        }
-            }
-        });
-        
+        }       
     }, 3000);
 }
 

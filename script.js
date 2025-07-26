@@ -46,6 +46,11 @@ auth.onAuthStateChanged(async (user) => {
             updateFarmStats();
             renderFarmProjects();
             
+            // Проверяем админские права ПОСЛЕ загрузки и рендеринга всего контента
+            setTimeout(() => {
+                checkAdminRights();
+            }, 200);
+            
             showNotification(`Добро пожаловать, ${currentUser.name}! 🎉`);
         } catch (error) {
             console.error('Ошибка загрузки данных пользователя:', error);
@@ -55,6 +60,7 @@ auth.onAuthStateChanged(async (user) => {
         isLoggedIn = false;
         currentUser = null;
         farmProjects = [];
+        isAdmin = false; // Сбрасываем админские права
         
         // Показываем форму авторизации
         document.getElementById('auth-section').classList.remove('hidden');
@@ -86,8 +92,11 @@ function checkAdminRights() {
 
 function showAdminControls() {
     document.querySelectorAll('.admin-controls').forEach(el => el.classList.add('show'));
-    addAdminButtonsToProjects();
-    addAdminButtonsToNews();
+    // Добавляем небольшую задержку для того чтобы проекты успели отрендериться
+    setTimeout(() => {
+        addAdminButtonsToProjects();
+        addAdminButtonsToNews();
+    }, 100);
 }
 
 function hideAdminControls() {
@@ -99,11 +108,12 @@ function hideAdminControls() {
 // Добавление админ-кнопок к проектам
 function addAdminButtonsToProjects() {
     document.querySelectorAll('.project-card').forEach(card => {
+        // Проверяем, что кнопки еще не добавлены
         if (!card.querySelector('.admin-project-controls')) {
             const adminControls = document.createElement('div');
             adminControls.className = 'admin-project-controls admin-controls show';
             adminControls.innerHTML = `
-                <button class="admin-btn" onclick="editProject(this)">✏️ Редактировать</button>
+                <button class="admin-btn" onclick="editProject(this)" style="background: #4CAF50; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-top: 10px;">✏️ Редактировать</button>
             `;
             card.appendChild(adminControls);
         }
@@ -320,6 +330,11 @@ async function initializeApp() {
     updateFarmStats();
     renderFarmProjects();
     renderFullNewsList();
+    
+    // Проверяем админские права после рендеринга всего контента
+    if (isLoggedIn) {
+        checkAdminRights();
+    }
 }
 
 function setupEventListeners() {
@@ -517,6 +532,11 @@ function renderStoreProjects() {
             </button>
         </div>
     `).join('');
+    
+    // Добавляем админ-кнопки если пользователь админ
+    if (isAdmin) {
+        setTimeout(() => addAdminButtonsToProjects(), 50);
+    }
 }
 
 function filterProjects(filter) {

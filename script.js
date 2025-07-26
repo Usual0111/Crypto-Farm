@@ -926,15 +926,9 @@ function editProject(button) {
 const projectName = titleElement ? titleElement.textContent.trim() : '';
 const project = projects.find(p => p.name === projectName);
 
-if (project) {
-    reward = project.reward;
-    deadline = project.deadline;
-    difficulty = project.difficulty;
-}
-    });
-    
+  const project = projects.find(p => p.name === (titleElement ? titleElement.textContent.trim() : ''));
     currentEditingProject = projectCard;
-const project = projects.find(p => p.name === (titleElement ? titleElement.textContent.trim() : ''));
+
     
     // Заполняем поля
 document.getElementById('edit-project-name').value = project ? project.name : '';

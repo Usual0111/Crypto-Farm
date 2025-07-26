@@ -969,7 +969,7 @@ function editProject(button) {
 }
 
 // Сохранение изменений проекта
-function saveProjectChanges() {
+async function saveProjectChanges() {
     if (!currentEditingProject) return;
     
     const newName = document.getElementById('edit-project-name').value;
@@ -1039,21 +1039,17 @@ function saveProjectChanges() {
     closeProjectModal();
 
 // Сохраняем изменения в Firebase
-if (project) {
-    saveProjectToFirebase(project);
+// ГЛАВНОЕ: Сохраняем в Firebase
+try {
+    await db.collection('projects').doc(project.id.toString()).set(project);
+    showNotification('Проект успешно обновлен и сохранен! ✅');
+    console.log('Проект сохранен в Firebase:', project);
+} catch (error) {
+    console.error('Ошибка сохранения проекта в Firebase:', error);
+    showNotification('Ошибка сохранения в базу данных ❌');
+    return;
 }
     currentEditingProject = null;
-}
-
-// Сохранение проекта в Firebase
-async function saveProjectToFirebase(project) {
-    try {
-        await db.collection('projects').doc(project.id.toString()).set(project);
-        console.log('Проект сохранен в Firebase');
-    } catch (error) {
-        console.error('Ошибка сохранения проекта:', error);
-        showNotification('Ошибка сохранения проекта ❌');
-    }
 }
 
 // Загрузка проектов из Firebase
@@ -1062,14 +1058,28 @@ async function loadProjectsFromFirebase() {
         const snapshot = await db.collection('projects').get();
         
         if (!snapshot.empty) {
+            const firebaseProjects = [];
+            
             snapshot.forEach(doc => {
                 const fbProject = doc.data();
-                const index = projects.findIndex(p => p.id === fbProject.id);
-                if (index !== -1) {
-                    projects[index] = fbProject; // Заменяем данные из Firebase
-                }
+                firebaseProjects.push(fbProject);
             });
-            console.log('Проекты загружены из Firebase');
+            
+            if (firebaseProjects.length > 0) {
+                firebaseProjects.forEach(fbProject => {
+                    const index = projects.findIndex(p => p.id === fbProject.id);
+                    if (index !== -1) {
+                        projects[index] = fbProject;
+                    } else {
+                        projects.push(fbProject);
+                    }
+                });
+            }
+            
+            console.log('Проекты загружены из Firebase:', projects);
+        } else {
+            console.log('В Firebase нет сохраненных проектов, используем дефолтные');
+            await saveDefaultProjectsToFirebase();
         }
     } catch (error) {
         console.error('Ошибка загрузки проектов:', error);
@@ -1225,5 +1235,22 @@ function closeProjectModal() {
         modal.classList.add('hidden');
         // Скрываем админ-секцию при закрытии
         document.getElementById('admin-edit-section').style.display = 'none';
+    }
+}
+
+// Функция для сохранения дефолтных проектов в Firebase
+async function saveDefaultProjectsToFirebase() {
+    try {
+        const batch = db.batch();
+        
+        projects.forEach(project => {
+            const docRef = db.collection('projects').doc(project.id.toString());
+            batch.set(docRef, project);
+        });
+        
+        await batch.commit();
+        console.log('Дефолтные проекты сохранены в Firebase');
+    } catch (error) {
+        console.error('Ошибка сохранения дефолтных проектов:', error);
     }
 }

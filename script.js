@@ -958,26 +958,62 @@ function saveProjectChanges() {
     const newLink = document.getElementById('edit-project-link').value;
     const newChecklist = document.getElementById('edit-project-checklist').value;
     
-    // Обновляем элементы в карточке проекта
-    currentEditingProject.querySelector('.project-name').textContent = newName;
-    currentEditingProject.querySelector('.reward').textContent = newReward;
-    currentEditingProject.querySelector('.category-tag').textContent = newCategory.toUpperCase();
-    currentEditingProject.querySelector('.deadline').textContent = newDeadline;
-    currentEditingProject.querySelector('.difficulty').textContent = newDifficulty;
+    // Обновляем название проекта
+    const nameElement = currentEditingProject.querySelector('.project-name');
+    if (nameElement) {
+        nameElement.textContent = newName;
+    }
     
-    // Если загружено новое изображение
+    // Обновляем тип проекта
+    const typeElement = currentEditingProject.querySelector('.project-type');
+    if (typeElement) {
+        typeElement.textContent = newCategory.toUpperCase();
+    }
+    
+    // Обновляем данные в project-info-row элементах
+    const infoRows = currentEditingProject.querySelectorAll('.project-info-row');
+    infoRows.forEach(row => {
+        const label = row.querySelector('.project-info-label');
+        const value = row.querySelector('.project-info-value');
+        
+        if (label && value) {
+            const labelText = label.textContent;
+            if (labelText.includes('Награда')) {
+                value.textContent = newReward;
+            } else if (labelText.includes('Дедлайн')) {
+                value.textContent = newDeadline;
+            } else if (labelText.includes('Сложность')) {
+                value.textContent = newDifficulty;
+            }
+        }
+    });
+    
+    // Обновляем иконку, если загружено новое изображение
     if (uploadedImages['project']) {
-        currentEditingProject.querySelector('.project-icon').src = uploadedImages['project'];
+        const iconElement = currentEditingProject.querySelector('.project-icon');
+        if (iconElement) {
+            // Если это img элемент
+            if (iconElement.tagName === 'IMG') {
+                iconElement.src = uploadedImages['project'];
+            } else {
+                // Если это div с эмодзи, заменяем на img
+                iconElement.innerHTML = `<img src="${uploadedImages['project']}" alt="${newName}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">`;
+            }
+        }
         delete uploadedImages['project'];
     }
     
-    // Обновляем ссылку
-    const projectLink = currentEditingProject.querySelector('a') || currentEditingProject;
-    if (newLink) {
-        projectLink.href = newLink;
+    // Также обновляем в массиве projects для консистентности
+    const project = projects.find(p => p.name === currentEditingProject.querySelector('.project-name').textContent);
+    if (project) {
+        project.name = newName;
+        project.type = newCategory;
+        project.reward = newReward;
+        project.deadline = newDeadline;
+        project.difficulty = newDifficulty;
     }
     
-    alert('Проект обновлен!');
+    showNotification('Проект успешно обновлен! ✅');
     closeProjectModal();
     currentEditingProject = null;
 }

@@ -918,20 +918,33 @@ if (typeof module !== 'undefined' && module.exports) {
 function editProject(button) {
     const projectCard = button.closest('.project-card');
     
-    // Безопасно получаем данные проекта
-    const projectNameEl = projectCard.querySelector('.project-name, h3, .project-title');
-    const projectRewardEl = projectCard.querySelector('.reward, .project-reward');
-    const projectImageEl = projectCard.querySelector('.project-icon, img');
+    // Извлекаем данные напрямую из DOM элементов карточки
+    const titleElement = projectCard.querySelector('h3');
+    const imgElement = projectCard.querySelector('img');
+    const categoryElement = projectCard.querySelector('.category-tag, [class*="category"]');
     
-    // Сохраняем ссылку на редактируемый проект
+    // Ищем данные в тексте через регулярные выражения
+    const cardHTML = projectCard.innerHTML;
+    const rewardMatch = cardHTML.match(/Награда:[\s\S]*?<[^>]*>([^<]+)</);
+    const deadlineMatch = cardHTML.match(/Дедлайн:[\s\S]*?<[^>]*>([^<]+)</);
+    const difficultyMatch = cardHTML.match(/Сложность:[\s\S]*?<[^>]*>([^<]+)</);
+    
     currentEditingProject = projectCard;
     
-    // Заполняем поля редактирования (с проверкой на существование элементов)
-    if (projectNameEl) document.getElementById('edit-project-name').value = projectNameEl.textContent || '';
-    if (projectRewardEl) document.getElementById('edit-project-reward').value = projectRewardEl.textContent || '';
-    if (projectImageEl) document.getElementById('current-project-image').src = projectImageEl.src || '';
+    // Заполняем поля
+    document.getElementById('edit-project-name').value = titleElement ? titleElement.textContent.trim() : '';
+    document.getElementById('edit-project-reward').value = rewardMatch ? rewardMatch[1].trim() : '';
+    document.getElementById('edit-project-deadline').value = deadlineMatch ? deadlineMatch[1].trim() : '';
+    document.getElementById('edit-project-difficulty').value = difficultyMatch ? difficultyMatch[1].trim() : 'Легко';
     
-    // Показываем проект в модальном окне и сразу показываем админ-секцию
+    if (categoryElement) {
+        document.getElementById('edit-project-category').value = categoryElement.textContent.toLowerCase();
+    }
+    
+    if (imgElement) {
+        document.getElementById('current-project-image').src = imgElement.src;
+    }
+    
     openProjectModal(projectCard);
     document.getElementById('admin-edit-section').style.display = 'block';
 }
